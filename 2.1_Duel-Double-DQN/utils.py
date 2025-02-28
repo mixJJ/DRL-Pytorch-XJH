@@ -17,9 +17,9 @@ def evaluate_policy(env, agent, turns = 3):
 #You can just ignore this funciton. Is not related to the RL.
 def str2bool(v):
     '''transfer str to bool for argparse'''
-    if isinstance(v, bool):
+    if isinstance(v, bool): # Is x an instance of type T?
         return v
-    if v.lower() in ('yes', 'True','true','TRUE', 't', 'y', '1'):
+    if v.lower() in ('yes', 'True','true','TRUE', 't', 'y', '1'): # lower() 函数把所有大写字母转成小写
         return True
     elif v.lower() in ('no', 'False','false','FALSE', 'f', 'n', '0'):
         return False

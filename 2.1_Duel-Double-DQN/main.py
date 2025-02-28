@@ -23,16 +23,16 @@ parser.add_argument('--eval_interval', type=int, default=int(2e3), help='Model e
 parser.add_argument('--random_steps', type=int, default=int(3e3), help='steps for random policy to explore')
 parser.add_argument('--update_every', type=int, default=50, help='training frequency')
 
-parser.add_argument('--gamma', type=float, default=0.99, help='Discounted Factor')
+parser.add_argument('--gamma', type=float, default=0.99, help='Discounted Factor')  # 折扣因子
 parser.add_argument('--net_width', type=int, default=200, help='Hidden net width')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')  # 学习率
 parser.add_argument('--batch_size', type=int, default=256, help='lenth of sliced trajectory')
 parser.add_argument('--exp_noise', type=float, default=0.2, help='explore noise')
 parser.add_argument('--noise_decay', type=float, default=0.99, help='decay rate of explore noise')
 parser.add_argument('--Double', type=str2bool, default=True, help='Whether to use Double Q-learning')
 parser.add_argument('--Duel', type=str2bool, default=True, help='Whether to use Duel networks')
 opt = parser.parse_args()
-opt.dvc = torch.device(opt.dvc) # from str to torch.device
+opt.dvc = torch.device(opt.dvc)
 print(opt)
 
 
@@ -41,22 +41,22 @@ def main():
     BriefEnvName = ['CPV1', 'LLdV2']
     env = gym.make(EnvName[opt.EnvIdex], render_mode = "human" if opt.render else None)
     eval_env = gym.make(EnvName[opt.EnvIdex])
-    opt.state_dim = env.observation_space.shape[0]
-    opt.action_dim = env.action_space.n
-    opt.max_e_steps = env._max_episode_steps
+    opt.state_dim = env.observation_space.shape[0]  # 4
+    opt.action_dim = env.action_space.n  # 2
+    opt.max_e_steps = env._max_episode_steps  # 每个 episode 的最大步数 500
 
-    #Algorithm Setting
+    # Algorithm Setting
     if opt.Duel: algo_name = 'Duel'
     else: algo_name = ''
     if opt.Double: algo_name += 'DDQN'
     else: algo_name += 'DQN'
 
-    # Seed Everything
-    env_seed = opt.seed
+    # Seed Everything, 为了 reproducibility 复现, 相同 seed 生成相同的随机数列
+    env_seed = opt.seed  # env.reset(seed=env_seed); env_seed += 1 保证每次跑程序开始一样, 但是之后每个 episode 不一样, 不然 overfit 过拟合
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed(opt.seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = False  # 禁止自选最快算法
     print("Random Seed: {}".format(opt.seed))
 
     print('Algorithm:',algo_name,'  Env:',BriefEnvName[opt.EnvIdex],'  state_dim:',opt.state_dim,
