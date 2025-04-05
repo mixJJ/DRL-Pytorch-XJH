@@ -8,6 +8,9 @@ from utils import evaluate_policy, str2bool, LinearSchedule
 from tianshou_wrappers import make_env_tianshou
 from AtariNames import Name
 
+import cProfile
+import pstats
+
 '''Hyperparameter Setting'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--device', type=str, default='cuda', help='running device of algorithm: cuda or cpu')
@@ -33,7 +36,7 @@ parser.add_argument('--noop_reset', type=str2bool, default=False, help='use Noop
 parser.add_argument('--huber_loss', type=str2bool, default=True, help='True: use huber_loss; False:use mse_loss')
 parser.add_argument('--fc_width', type=int, default=200, help='number of units in Fully Connected layer')
 
-parser.add_argument('--EnvIdex', type=int, default=37, help='Index of the Env; 20=Enduro; 37=Pong')
+parser.add_argument('--EnvIdex', type=int, default=46, help='Index of the Env; 20=Enduro; 37=Pong')
 parser.add_argument('--seed', type=int, default=5, help='random seed')
 parser.add_argument('--Double', type=str2bool, default=False, help="whether to use Double Q-learning")
 parser.add_argument('--Duel', type=str2bool, default=False, help="whether to use Duel. Q-learning")
@@ -122,7 +125,12 @@ def main():
 if __name__ == '__main__':
     main()
 
-
+# if __name__ == "__main__":
+#     with cProfile.Profile() as pr:
+#         main()
+#     stats = pstats.Stats(pr)
+#     stats.strip_dirs()
+#     stats.sort_stats("cumtime").print_stats(30)  # 打印前30个最耗时函数
 
 
 

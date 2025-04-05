@@ -2,6 +2,8 @@
 # https://github.com/thu-ml/tianshou/blob/master/examples/atari/atari_wrapper.py
 from collections import deque
 import gymnasium as gym
+import ale_py  # Atari游戏
+gym.register_envs(ale_py)  # 注册 ALE Atari 环境
 import numpy as np
 import torch
 import cv2

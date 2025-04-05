@@ -164,7 +164,7 @@ class ReplayBuffer_torch():
 
 	def sample(self, batch_size):
 		# ind = np.random.choice((self.size-1), batch_size, replace=False)  # Time consuming, but no duplication
-		ind = np.random.randint(0, (self.size-1), batch_size)  # Time effcient, might duplicates
+		ind = np.random.randint(0, (self.size-1), batch_size)  # Time efficient, might duplicate 我觉得不应该 self.size-1
 		return self.state[ind].to(self.device),self.action[ind].to(self.device),self.reward[ind].to(self.device),\
 			   self.next_state[ind].to(self.device),self.dw[ind].to(self.device)
 
