@@ -6,13 +6,15 @@ import os, shutil
 import argparse
 import torch
 
+start_time = datetime.now()
 
 '''Hyperparameter Setting'''
-# bash 输入 范例
-# python Rainbow_main.py &
-# python Rainbow_main.py --duel &
-# python Rainbow_main.py --double &
-# python Rainbow_main.py --double --duel &
+# mkdir -p logs
+
+# python main.py --Double False --Duel False > logs/DQN_$(date +%F_%H-%M-%S).log 2>&1 &
+# python main.py --Double True --Duel False > logs/DDQN_$(date +%F_%H-%M-%S).log 2>&1 &
+# python main.py --Double False --Duel True > logs/DuelDQN_$(date +%F_%H-%M-%S).log 2>&1 &
+# python main.py --Double True --Duel True > logs/DuelDDQN_$(date +%F_%H-%M-%S).log 2>&1 &
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dvc', type=str, default='cuda', help='running device: cuda or cpu')  # OK
@@ -125,6 +127,10 @@ def main():
                     agent.save(algo_name,BriefEnvName[opt.EnvIdex],int(total_steps/1000))
     env.close()
     eval_env.close()
+
+    end_time = datetime.now()
+    running_time = end_time - start_time
+    print(f"running_time: {running_time}")  # 程序总运行时长 时分秒毫秒 格式
 
 if __name__ == '__main__':
     main()

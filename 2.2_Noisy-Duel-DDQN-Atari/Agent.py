@@ -16,7 +16,7 @@ class Q_Net(nn.Module):
 			nn.ReLU(),
 			nn.Conv2d(64, 64, 3, stride=1),
 			nn.ReLU(),
-			nn.Flatten())
+			nn.Flatten())  # 等价于 x.view(x.size(0), -1) 用于输入 Linear
 		if opt.Noisy:
 			self.fc1 = NoisyLinear(64 * 7 * 7, opt.fc_width)
 			self.fc2 = NoisyLinear(opt.fc_width, opt.action_dim)
@@ -62,6 +62,36 @@ class Duel_Q_Net(nn.Module):
 		return Q
 
 
+class ReplayBuffer_torch(object):
+	def __init__(self, device, max_size=int(1e5)):
+		self.device = device
+		self.max_size = max_size
+		self.ptr = 0
+		self.size = 0
+
+		self.state = torch.zeros((max_size, 4, 84, 84), dtype=torch.uint8)
+		self.action = torch.zeros((max_size, 1), dtype=torch.int64)
+		self.reward = torch.zeros((max_size, 1))
+		self.next_state = torch.zeros((max_size, 4, 84, 84), dtype=torch.uint8)
+		self.dw = torch.zeros((max_size, 1), dtype=torch.bool)
+
+	def add(self, state, action, reward, next_state, dw):
+		self.state[self.ptr] = state  # 因为默认启用了 frame_stack wrapper, step reset 返回的都是 tensor, 所以直接塞进去没问题
+		self.action[self.ptr] = action
+		self.reward[self.ptr] = reward
+		self.next_state[self.ptr] = next_state
+		self.dw[self.ptr] = dw  # 0,0,0，...，1
+
+		self.ptr = (self.ptr + 1) % self.max_size
+		self.size = min(self.size + 1, self.max_size)
+
+	def sample(self, batch_size):
+		# ind = np.random.choice((self.size-1), batch_size, replace=False)  # Time consuming, but no duplication
+		ind = np.random.randint(0, (self.size-1), batch_size)  # Time efficient, might duplicate 我觉得不应该 self.size-1   # 而且应该用 torch.randint 风格更统一
+		return self.state[ind].to(self.device),self.action[ind].to(self.device),self.reward[ind].to(self.device),\
+			   self.next_state[ind].to(self.device),self.dw[ind].to(self.device)
+
+
 class DeepQ_Agent(object):
 	def __init__(self,opt):
 		self.dvc = opt.dvc
@@ -69,13 +99,15 @@ class DeepQ_Agent(object):
 		self.batch_size = opt.batch_size
 		self.gamma = opt.gamma
 		self.train_counter = 0
-		self.huber_loss = opt.huber_loss
+		self.huber_loss = opt.huber_loss  # ??????
 		self.Double = opt.Double
 		self.Duel = opt.Duel
 		self.Noisy = opt.Noisy
 
-		if self.Duel: self.q_net = Duel_Q_Net(opt).to(self.dvc)
-		else: self.q_net = Q_Net(opt).to(self.dvc)
+		if self.Duel:
+			self.q_net = Duel_Q_Net(opt).to(self.dvc)
+		else:
+			self.q_net = Q_Net(opt).to(self.dvc)
 		self.q_net_optimizer = torch.optim.Adam(self.q_net.parameters(), lr=opt.lr)
 		self.q_target = copy.deepcopy(self.q_net)
 		# Freeze target networks with respect to optimizers (only update via polyak averaging)
@@ -86,12 +118,12 @@ class DeepQ_Agent(object):
 	def select_action(self, state, evaluate):
 		with torch.no_grad():
 			state = state.unsqueeze(0).to(self.dvc)
-			if self.Noisy: #NoisyNet时，不需要e-greedy
+			if self.Noisy:  # NoisyNet时, 不需要e-greedy
 				return self.q_net(state).argmax().item()
 			else:
-				p = 0.01 if evaluate else self.exp_noise
+				p = 0.01 if evaluate else self.exp_noise  # main 中赋值过了 agent.exp_noise = opt.init_e
 				if np.random.rand() < p:
-					return np.random.randint(0,self.action_dim)
+					return np.random.randint(0, self.action_dim)
 				else:
 					return self.q_net(state).argmax().item()
 
@@ -120,7 +152,7 @@ class DeepQ_Agent(object):
 
 		self.q_net_optimizer.zero_grad()
 		q_loss.backward()
-		torch.nn.utils.clip_grad_norm_(self.q_net.parameters(), 20)
+		torch.nn.utils.clip_grad_norm_(self.q_net.parameters(), 20)  # ??????
 		self.q_net_optimizer.step()
 
 		# hard target update
@@ -139,34 +171,6 @@ class DeepQ_Agent(object):
 
 
 
-class ReplayBuffer_torch():
-	def __init__(self, device, max_size=int(1e5)):
-		self.device = device
-		self.max_size = max_size
-		self.ptr = 0
-		self.size = 0
-
-		self.state = torch.zeros((max_size, 4, 84, 84), dtype=torch.uint8)
-		self.action = torch.zeros((max_size, 1), dtype=torch.int64)
-		self.reward = torch.zeros((max_size, 1))
-		self.next_state = torch.zeros((max_size, 4, 84, 84), dtype=torch.uint8)
-		self.dw = torch.zeros((max_size, 1), dtype=torch.bool)
-
-	def add(self, state, action, reward, next_state, dw):
-		self.state[self.ptr] = state
-		self.action[self.ptr] = action
-		self.reward[self.ptr] = reward
-		self.next_state[self.ptr] = next_state
-		self.dw[self.ptr] = dw  # 0,0,0，...，1
-
-		self.ptr = (self.ptr + 1) % self.max_size
-		self.size = min(self.size + 1, self.max_size)
-
-	def sample(self, batch_size):
-		# ind = np.random.choice((self.size-1), batch_size, replace=False)  # Time consuming, but no duplication
-		ind = np.random.randint(0, (self.size-1), batch_size)  # Time efficient, might duplicate 我觉得不应该 self.size-1
-		return self.state[ind].to(self.device),self.action[ind].to(self.device),self.reward[ind].to(self.device),\
-			   self.next_state[ind].to(self.device),self.dw[ind].to(self.device)
 
 
 

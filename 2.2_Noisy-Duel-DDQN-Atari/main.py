@@ -13,34 +13,34 @@ import pstats
 
 '''Hyperparameter Setting'''
 parser = argparse.ArgumentParser()
-parser.add_argument('--device', type=str, default='cuda', help='running device of algorithm: cuda or cpu')
-parser.add_argument('--write', type=str2bool, default=False, help='Use SummaryWriter to record the training')
-parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')
-parser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')
-parser.add_argument('--ModelIdex', type=int, default=900, help='which model to load')
+parser.add_argument('--device', type=str, default='cuda', help='running device of algorithm: cuda or cpu')  # OK
+parser.add_argument('--write', type=str2bool, default=True, help='Use SummaryWriter to record the training')  # OK
+parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')  # OK
+parser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')  # OK
+parser.add_argument('--ModelIdex', type=int, default=900, help='which model to load')  # OK
 
-parser.add_argument('--Max_train_steps', type=int, default=int(1E6), help='Max training steps')
-parser.add_argument('--save_interval', type=int, default=int(1E5), help='Model saving interval, in steps.')
-parser.add_argument('--eval_interval', type=int, default=int(5e3), help='Model evaluating interval, in steps.')
-parser.add_argument('--random_steps', type=int, default=int(1e4), help='random steps before training, 5E4 in DQN Nature')
-parser.add_argument('--buffersize', type=int, default=int(1e4), help='Size of the replay buffer')
-parser.add_argument('--target_freq', type=int, default=int(1E3), help='frequency of target net updating')
+parser.add_argument('--Max_train_steps', type=int, default=int(1E6), help='Max training steps')  # OK
+parser.add_argument('--save_interval', type=int, default=int(1E5), help='Model saving interval, in steps.')  # OK
+parser.add_argument('--eval_interval', type=int, default=int(5e3), help='Model evaluating interval, in steps.')  # OK
+parser.add_argument('--random_steps', type=int, default=int(1e4), help='random steps before training, 5E4 in DQN Nature')  # OK
+parser.add_argument('--buffersize', type=int, default=int(1e4), help='Size of the replay buffer')  # OK
+parser.add_argument('--target_freq', type=int, default=int(1E3), help='frequency of target net updating')  # OK
 
-parser.add_argument('--gamma', type=float, default=0.99, help='Discounted Factor')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
-parser.add_argument('--batch_size', type=int, default=32, help='lenth of sliced trajectory')
-parser.add_argument('--init_e', type=float, default=1.0, help='Initial e-greedy noise')
-parser.add_argument('--anneal_frac', type=int, default=3e5, help='annealing fraction of e-greedy noise')
-parser.add_argument('--final_e', type=float, default=0.02, help='Final e-greedy noise')
-parser.add_argument('--noop_reset', type=str2bool, default=False, help='use NoopResetEnv or not')
-parser.add_argument('--huber_loss', type=str2bool, default=True, help='True: use huber_loss; False:use mse_loss')
-parser.add_argument('--fc_width', type=int, default=200, help='number of units in Fully Connected layer')
+parser.add_argument('--gamma', type=float, default=0.99, help='Discounted Factor')  # OK
+parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')  # OK
+parser.add_argument('--batch_size', type=int, default=32, help='lenth of sliced trajectory')  # OK
+parser.add_argument('--init_e', type=float, default=1.0, help='Initial e-greedy noise')  # OK
+parser.add_argument('--anneal_frac', type=int, default=3e5, help='annealing fraction of e-greedy noise')  # OK
+parser.add_argument('--final_e', type=float, default=0.02, help='Final e-greedy noise')  # OK
+parser.add_argument('--noop_reset', type=str2bool, default=False, help='use NoopResetEnv or not')  # OK
+parser.add_argument('--huber_loss', type=str2bool, default=True, help='True: use huber_loss; False:use mse_loss')  # OK
+parser.add_argument('--fc_width', type=int, default=200, help='number of units in Fully Connected layer')  # OK
 
-parser.add_argument('--EnvIdex', type=int, default=46, help='Index of the Env; 20=Enduro; 37=Pong')
-parser.add_argument('--seed', type=int, default=5, help='random seed')
-parser.add_argument('--Double', type=str2bool, default=False, help="whether to use Double Q-learning")
-parser.add_argument('--Duel', type=str2bool, default=False, help="whether to use Duel. Q-learning")
-parser.add_argument('--Noisy', type=str2bool, default=False, help="whether to use NoisyNet")
+parser.add_argument('--EnvIdex', type=int, default=46, help='Index of the Env; 20=Enduro; 37=Pong')  # OK
+parser.add_argument('--seed', type=int, default=5, help='random seed')  # OK
+parser.add_argument('--Double', type=str2bool, default=False, help="whether to use Double Q-learning")  # OK
+parser.add_argument('--Duel', type=str2bool, default=False, help="whether to use Duel. Q-learning")  # OK
+parser.add_argument('--Noisy', type=str2bool, default=False, help="whether to use NoisyNet")  # ??????
 opt = parser.parse_args()
 opt.dvc = torch.device(opt.device)
 opt.algo_name = ('Double-' if opt.Double else '') + ('Duel-' if opt.Duel else '') + ('Noisy-' if opt.Noisy else '') + 'DQN'

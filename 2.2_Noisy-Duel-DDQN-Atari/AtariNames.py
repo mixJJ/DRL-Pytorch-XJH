@@ -1,5 +1,4 @@
 
-
 Name = {
 	1: "Alien",
 	2: "Amidar",

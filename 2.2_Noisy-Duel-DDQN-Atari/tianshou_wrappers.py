@@ -1,7 +1,7 @@
 # Borrow a lot from tianshou:
 # https://github.com/thu-ml/tianshou/blob/master/examples/atari/atari_wrapper.py
 from collections import deque
-import gymnasium as gym
+import gymnasium as gym  # 继承并改写了父类方法 gym.Wrapper, 变成了自己定制化的环境包装器 wrapper, 包括 env.reset(); env.step(); 输出的 observation reward
 import ale_py  # Atari游戏
 gym.register_envs(ale_py)  # 注册 ALE Atari 环境
 import numpy as np
@@ -13,8 +13,8 @@ def make_env_tianshou(
     noop_reset=True,
     episode_life=True,
     clip_rewards=True,
-    frame_stack=4,
-    warp_frame=True,
+    frame_stack=4,  # 默认有
+    warp_frame=True,  # 默认有
     render_mode=None
 ):
     """Configure environment for DeepMind-style Atari.
@@ -26,10 +26,10 @@ def make_env_tianshou(
     env = gym.make(env_name, render_mode=render_mode)
     if noop_reset:
         env = NoopResetEnv(env, noop_max=30)
-    env = MaxAndSkipEnv(env, skip=4)
+    env = MaxAndSkipEnv(env, skip=4)  # 注意这个 默认是始终有的
     if episode_life:
         env = EpisodicLifeEnv(env)
-    if 'FIRE' in env.unwrapped.get_action_meanings():
+    if 'FIRE' in env.unwrapped.get_action_meanings():  # 动作包含 FIRE 就自动启用
         env = FireResetEnv(env)
     if warp_frame:
         env = WarpFrame(env)
@@ -178,7 +178,8 @@ class EpisodicLifeEnv(gym.Wrapper):
         return obs
 
 
-class FireResetEnv(gym.Wrapper):
+class FireResetEnv(gym.Wrapper):  # 在 reset() 之后，自动执行一次 action=1 (FIRE)
+    # 用于启动某些 Atari 游戏, 它们不会自动开始, 需要玩家按下"FIRE"才开始游戏
     """Take action on reset for environments that are fixed until firing.
 
     Related discussion: https://github.com/openai/baselines/issues/240.
@@ -197,7 +198,7 @@ class FireResetEnv(gym.Wrapper):
         return (obs, {}) if return_info else obs
 
 
-class WarpFrame(gym.ObservationWrapper):
+class WarpFrame(gym.ObservationWrapper):  # RGB 转灰度图; 缩放为 84*84
     """Warp frames to 84x84 as done in the Nature paper and later work.
 
     :param gym.Env env: the environment to wrap.
@@ -277,5 +278,7 @@ class FrameStack(gym.Wrapper):
         # the original wrapper use `LazyFrames` but since we use np buffer, it has no effect
         return torch.tensor(np.stack(self.frames, axis=0), dtype=torch.uint8) #return torch.tensor instead of numpy
 
-
+# torch.tensor(...) 复制数据, 避免共享内存副作用, 更安全, 数据独立, 不受 numpy 改动影响
+# torch.from_numpy(...) 零拷贝, 要求输入是 contiguous, 但要小心引用和内存布局, 共享内存污染问题
+# 此处用是安全的, 因为每次调用 np.stack 都新生成一个 numpy 数组; 这新生成的没有被任何其他地方引用或修改; 是纯局部的、临时的、只读的数据源
 

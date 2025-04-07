@@ -5,7 +5,7 @@ import math
 
 
 def evaluate_policy(env, agent, seed, turns = 3):
-    agent.q_net.eval() # 关闭NoisyNet的噪声
+    agent.q_net.eval()  # NoisyNet 每次 forward 会引入新噪声, .eval() 关闭 NoisyNet 噪声, 固定输出
     scores = 0
     for j in range(turns):
         s, info = env.reset(seed=seed)
@@ -16,7 +16,7 @@ def evaluate_policy(env, agent, seed, turns = 3):
             done = (dw or tr)
             scores += r
             s = s_next
-    agent.q_net.train()
+    agent.q_net.train()  # 评估完一定要恢复状态
     return int(scores/turns)
 
 
